@@ -124,6 +124,9 @@ namespace Tracker
         {
             try
             {
+                var screenWidth = Drawing.Width;
+                var screenHeight = Drawing.Height;
+
                 foreach (var hero in
                     HeroManager.AllHeroes.Where(
                         hero =>
@@ -134,6 +137,8 @@ namespace Tracker
                     var pos = GetHPBarPositionWithOffset(hero);
                     var X = (int) pos.X;
                     var Y = (int) pos.Y;
+
+                    if (X < -300 || X > screenWidth + 300 || Y < -300 || Y > screenHeight + 300) continue;
 
                     var k = 0;
 
@@ -215,11 +220,6 @@ namespace Tracker
 
         private static Vector2 GetHPBarPositionWithOffset(Obj_AI_Hero unit)
         {
-            if (unit == null || !unit.IsValid)
-            {
-                return Vector2.Zero;
-            }
-
             var teamOffset = unit.IsAlly ? new Vector2(-9, 14) : new Vector2(-9, 17);
             var champOffset = unit.ChampionName == "Jhin" ? new Vector2(-8, -14) : Vector2.Zero;
             var offset = teamOffset + champOffset;
