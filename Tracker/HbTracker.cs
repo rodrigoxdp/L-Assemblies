@@ -58,7 +58,46 @@ namespace Tracker
                 Console.WriteLine(@"/ff can't load the textures: " + e);
             }
 
+            Drawing.OnPreReset += DrawingOnOnPreReset;
+            Drawing.OnPostReset += DrawingOnOnPostReset;
             Drawing.OnDraw += Drawing_OnEndScene;
+            AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
+        }
+
+        private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+        {
+            ReadyLine.Dispose();
+            Text.Dispose();
+            CdFrame.Dispose();
+
+            foreach (var sprite in SummonerTextures)
+            {
+                sprite.Value.Dispose();
+            }
+        }
+
+        private static void DrawingOnOnPostReset(EventArgs args)
+        {
+            ReadyLine.OnPostReset();
+            Text.OnPostReset();
+            CdFrame.OnPostReset();
+
+            foreach (var sprite in SummonerTextures)
+            {
+                sprite.Value.OnPostReset();
+            }
+        }
+
+        private static void DrawingOnOnPreReset(EventArgs args)
+        {
+            ReadyLine.OnPreReset();
+            Text.OnPreReset();
+            CdFrame.OnPreReset();
+
+            foreach (var sprite in SummonerTextures)
+            {
+                sprite.Value.OnPreReset();
+            }
         }
 
         public static void AttachToMenu(Menu menu)
