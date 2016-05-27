@@ -30,6 +30,7 @@ namespace Tracker
         public string SpellName;
         public WardType Type;
 
+
         public Bitmap Bitmap
         {
             get
@@ -142,14 +143,14 @@ namespace Tracker
             }
 
             //Create the circle:
-            _defaultCircle = new Render.Circle(Position, 200, Color, 5, true);
+            _defaultCircle = new Render.Circle(Position, WardData.Type == WardType.Trap ? WardData.Range : 200, Color, 5, true);
             _defaultCircle.VisibleCondition +=
                 sender =>
                     WardTracker.Config.Item("Enabled").GetValue<bool>() &&
                     !WardTracker.Config.Item("Details").GetValue<KeyBind>().Active &&
                     Render.OnScreen(Drawing.WorldToScreen(Position));
             _defaultCircle.Add(0);
-            _defaultCircleFilled = new Render.Circle(Position, 200, Color.FromArgb(25, Color), -142857, true);
+            _defaultCircleFilled = new Render.Circle(Position, WardData.Type == WardType.Trap ? WardData.Range : 200, Color.FromArgb(25, Color), -142857, true);
             _defaultCircleFilled.VisibleCondition +=
                 sender =>
                     WardTracker.Config.Item("Enabled").GetValue<bool>() &&
@@ -228,6 +229,8 @@ namespace Tracker
             {
                 _missileLine.Remove();
             }
+
+            
             return true;
         }
     }
@@ -240,6 +243,7 @@ namespace Tracker
         private static readonly List<WardData> PossibleWards = new List<WardData>();
         private static readonly List<DetectedWard> DetectedWards = new List<DetectedWard>();
         private static readonly List<string> WardObjectNames = new List<string>();
+        private const bool TrackAllies = false;
 
         public static Menu Config;
 
@@ -347,18 +351,27 @@ namespace Tracker
             PossibleWards.Add(
                 new WardData
                 {
+                    Duration = 120 * 1000,
+                    ObjectBaseSkinName = "jhintrap",
+                    Range = 130,
+                    SpellName = "JhinE",
+                    Type = WardType.Trap
+                });
+            PossibleWards.Add(
+                new WardData
+                {
                     Duration = 79 * 1000,
                     ObjectBaseSkinName = "sru_crabward",
                     Range = 1100,
                     SpellName = "",
                     Type = WardType.Green
                 });
-
+            
             #endregion
 
             foreach (var ward in PossibleWards)
             {
-                WardObjectNames.Add(ward.ObjectBaseSkinName);
+                WardObjectNames.Add(ward.ObjectBaseSkinName.ToLowerInvariant());
             }
 
             //Used for removing the wards that expire:
@@ -387,7 +400,7 @@ namespace Tracker
             var missile = sender as MissileClient;
 
             if (missile == null || !missile.IsValid || !missile.SpellCaster.IsValid<Obj_AI_Hero>() ||
-                missile.SpellCaster.IsAlly || missile.SpellCaster.IsVisible ||
+                missile.SpellCaster.IsAlly && !TrackAllies || missile.SpellCaster.IsVisible ||
                 missile.SData.Name != "itemplacementmissile")
             {
                 return;
@@ -422,15 +435,15 @@ namespace Tracker
         {
             var wardObject = sender as Obj_AI_Base;
 
-            if (wardObject == null || !wardObject.IsValid || wardObject.IsAlly ||
-                !WardObjectNames.Contains(wardObject.CharData.BaseSkinName))
+            if (wardObject == null || !wardObject.IsValid || wardObject.IsAlly && !TrackAllies ||
+                !WardObjectNames.Contains(wardObject.CharData.BaseSkinName.ToLowerInvariant()))
 
             {
                 return;
             }
-
+           
             var wardData =
-                PossibleWards.FirstOrDefault(o => string.Equals(wardObject.CharData.BaseSkinName, o.ObjectBaseSkinName));
+                PossibleWards.FirstOrDefault(o => string.Equals(wardObject.CharData.BaseSkinName, o.ObjectBaseSkinName, StringComparison.InvariantCultureIgnoreCase));
 
             if (wardData == null)
             {
@@ -441,8 +454,8 @@ namespace Tracker
             var detectedWard =
                 DetectedWards.FirstOrDefault(
                     w =>
-                        w.Position.Distance(wardObject.Position) < 200 &&
-                        (Math.Abs(w.StartT - startT) < 1000 || wardData.Type != WardType.Green));
+                        w.Position.Distance(wardObject.Position) < 200 && w.WardObject == null &&
+                        (Math.Abs(w.StartT - startT) < 1000 || wardData.Type != WardType.Green) && w.WardData.Type == wardData.Type);
 
             var position = wardObject.Position;
 
@@ -450,13 +463,14 @@ namespace Tracker
             {
                 wardData.Duration = detectedWard.Duration;
                 detectedWard.Remove();
+                DetectedWards.Remove(detectedWard);
             }
 
             if (wardData.ObjectBaseSkinName == "sru_crabward")
             {
                 position = CrabWardPositions.MinOrDefault(p => p.Distance(wardObject.Position));
             }
-
+            
             DetectedWards.Add(new DetectedWard(wardData, position, startT, wardObject));
         }
 
@@ -464,7 +478,7 @@ namespace Tracker
         {
             var hero = sender as Obj_AI_Hero;
 
-            if (hero == null || sender.IsAlly)
+            if (hero == null || sender.IsAlly && !TrackAllies)
             {
                 return;
             }
@@ -493,7 +507,7 @@ namespace Tracker
             DetectedWards.RemoveAll(
                 w =>
                     (w.EndT <= Utils.TickCount && w.Duration != int.MaxValue && w.Remove()) ||
-                    (w.WardObject != null && !w.WardObject.IsValid && w.Remove()));
+                    (w.WardObject != null && (!w.WardObject.IsValid || w.WardObject.IsDead) && w.Remove()));
         }
     }
 }
