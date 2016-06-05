@@ -455,7 +455,7 @@ namespace Tracker
                 DetectedWards.FirstOrDefault(
                     w =>
                         w.Position.Distance(wardObject.Position) < 200 && w.WardObject == null &&
-                        (Math.Abs(w.StartT - startT) < 1000 || wardData.Type != WardType.Green) && w.WardData.Type == wardData.Type);
+                        (Math.Abs(w.StartT - startT) < 5000 || wardData.Type != WardType.Green) && w.WardData.Type == wardData.Type);
 
             var position = wardObject.Position;
 
