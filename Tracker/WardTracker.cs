@@ -317,7 +317,7 @@ namespace Tracker
                 {
                     Duration = 90 * 1000,
                     ObjectBaseSkinName = "CaitlynTrap",
-                    Range = 300,
+                    Range = 100,
                     SpellName = "CaitlynYordleTrap",
                     Type = WardType.Trap
                 });
@@ -326,7 +326,7 @@ namespace Tracker
                 {
                     Duration = 60 * 10 * 1000,
                     ObjectBaseSkinName = "TeemoMushroom",
-                    Range = 212,
+                    Range = 150,
                     SpellName = "BantamTrap",
                     Type = WardType.Trap
                 });
@@ -335,7 +335,7 @@ namespace Tracker
                 {
                     Duration = 60 * 1 * 1000,
                     ObjectBaseSkinName = "ShacoBox",
-                    Range = 212,
+                    Range = 150,
                     SpellName = "JackInTheBox",
                     Type = WardType.Trap
                 });
@@ -344,7 +344,7 @@ namespace Tracker
                 {
                     Duration = 60 * 2 * 1000,
                     ObjectBaseSkinName = "Nidalee_Spear",
-                    Range = 212,
+                    Range = 100,
                     SpellName = "Bushwhack",
                     Type = WardType.Trap
                 });
