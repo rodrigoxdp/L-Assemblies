@@ -49,7 +49,7 @@ namespace Sion
 
             //Add the target selector to the menu as submenu.
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-            SimpleTs.AddToMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
 
             //Load the orbwalker and add it to the menu as submenu.
@@ -75,8 +75,8 @@ namespace Sion
             Config.AddToMainMenu();
 
             Game.PrintChat("Sion Loaded!");
-            Game.OnGameUpdate += Game_OnGameUpdate;
-            Game.OnGameProcessPacket += Game_OnGameProcessPacket;
+            Game.OnUpdate += Game_OnGameUpdate;
+            Game.OnProcessPacket += Game_OnGameProcessPacket;
             Drawing.OnDraw += Drawing_OnDraw;
             Obj_AI_Base.OnProcessSpellCast += ObjAiHeroOnOnProcessSpellCast;
         }
@@ -97,8 +97,7 @@ namespace Sion
 
         private static void Game_OnGameProcessPacket(GamePacketEventArgs args)
         {
-            if (Config.Item("AntiCamLock").GetValue<bool>() && args.PacketData[0] == Packet.MultiPacket.Header &&
-                args.PacketData[5] == (byte) Packet.MultiPacketType.LockCamera)
+            if (Config.Item("AntiCamLock").GetValue<bool>() && args.PacketData[0] == 0x83 && args.PacketData[7] == 0x47 && args.PacketData[8] == 0x47)
             {
                 args.Process = false;
             }
@@ -119,10 +118,10 @@ namespace Sion
 
             if (Config.Item("ComboActive").GetValue<KeyBind>().Active)
             {
-                var qTarget = SimpleTs.GetTarget(
-                    !Q.IsCharging ? Q.ChargedMaxRange / 2 : Q.ChargedMaxRange, SimpleTs.DamageType.Physical);
+                var qTarget = TargetSelector.GetTarget(
+                    !Q.IsCharging ? Q.ChargedMaxRange / 2 : Q.ChargedMaxRange, TargetSelector.DamageType.Physical);
 
-                var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Physical);
+                var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
 
                 if (qTarget != null && Config.Item("UseQCombo").GetValue<bool>())
                 {
@@ -147,10 +146,7 @@ namespace Sion
 
                             if (qTarget.ServerPosition.To2D().Distance(A, B, true, true) < 50 * 50)
                             {
-                                Packet.C2S.ChargedCast.Encoded(
-                                    new Packet.C2S.ChargedCast.Struct(
-                                        (SpellSlot) ((byte) Q.Slot), Game.CursorPos.X, Game.CursorPos.X,
-                                        Game.CursorPos.X)).Send();
+                                Q.Cast(qTarget, true);
                             }
                         }
                         return;

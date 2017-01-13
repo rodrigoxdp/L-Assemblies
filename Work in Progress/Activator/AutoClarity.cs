@@ -19,7 +19,7 @@ namespace Activator
                 return;
             }
 
-            Game.OnGameUpdate += OnGameUpdate;
+            Game.OnUpdate += OnGameUpdate;
         }
 
         public static void AddToMenu(Menu menu)
@@ -39,7 +39,7 @@ namespace Activator
 
         private static bool Disallowed()
         {
-            return (!Menu.Item("Enabled").GetValue<bool>() || Player.HasBuff("Recall") || Utility.InFountain() ||
+            return (!Menu.Item("Enabled").GetValue<bool>() || Player.HasBuff("Recall") || ObjectManager.Player.InFountain() || ObjectManager.Player.InShop() ||
                     Player.Spellbook.GetSpell(ClaritySlot).State != SpellState.Ready);
         }
 

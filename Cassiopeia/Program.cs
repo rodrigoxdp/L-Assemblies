@@ -95,9 +95,9 @@ namespace Cassio
             _config.AddToMainMenu();
 
             Drawing.OnDraw += Drawing_OnDraw;
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnGameUpdate;
             Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
-            Game.OnGameSendPacket += Game_OnGameSendPacket;
+            Game.OnSendPacket += Game_OnGameSendPacket;
         }
 
         private static void Game_OnGameSendPacket(GamePacketEventArgs args)

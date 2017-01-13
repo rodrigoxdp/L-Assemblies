@@ -51,7 +51,7 @@ namespace Orianna
 
             //Add the target selector to the menu as submenu.
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-            SimpleTs.AddToMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
 
             //Load the orbwalker and add it to the menu as submenu.
@@ -152,8 +152,8 @@ namespace Orianna
             Config.AddToMainMenu();
 
             Drawing.OnDraw += Drawing_OnDraw;
-            Game.OnGameSendPacket += Game_OnGameSendPacket;
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            Spellbook.OnCastSpell += Spellbook_OnCastSpell;
+            Game.OnUpdate += Game_OnGameUpdate;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPossibleToInterrupt;
             Orbwalking.OnNonKillableMinion += Orbwalking_OnNonKillableMinion;
         }
@@ -169,7 +169,7 @@ namespace Orianna
 
                 if (menuItem.Active)
                 {
-                    Utility.DrawCircle(position, spell.Range, menuItem.Color);
+                    Render.Circle.DrawCircle(position, spell.Range, menuItem.Color);
                 }
             }
         }
@@ -200,36 +200,32 @@ namespace Orianna
             }
         }
 
-        private static void Game_OnGameSendPacket(GamePacketEventArgs args)
+        private static void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
         {
-            if (args.PacketData[0] != Packet.C2S.Cast.Header)
+            if (sender.Owner.IsMe && args.Slot == SpellSlot.R)
             {
-                return;
-            }
-
-            var decodedPacket = Packet.C2S.Cast.Decoded(args.PacketData);
-            if (decodedPacket.SourceNetworkId != ObjectManager.Player.NetworkId || decodedPacket.Slot != SpellSlot.R)
-            {
-                return;
-            }
-            ;
-
-            if (Math.Abs(R.GetHitCount()) < float.Epsilon)
-            {
-                args.Process = false;
+                if (Math.Abs(R.GetHitCount()) < float.Epsilon)
+                {
+                    args.Process = false;
+                }
             }
         }
 
         // TODO: add w
-        private static void Orbwalking_OnNonKillableMinion(Obj_AI_Base minion)
+        private static void Orbwalking_OnNonKillableMinion(AttackableUnit minion)
         {
-            var useQi = Config.Item("UseQFarm").GetValue<StringList>().SelectedIndex;
-
-            if (Config.Item("FreezeActive").GetValue<KeyBind>().Active && (useQi == 0 || useQi == 2) && Q.IsReady() &&
-                minion.IsValidTarget(Q.Range + Q.Width) && Q.GetHealthPrediction(minion) > 0)
+            if (minion is Obj_AI_Minion)
             {
-                Q.Cast(minion);
+                var leMinion = (Obj_AI_Minion)minion;
+                var useQi = Config.Item("UseQFarm").GetValue<StringList>().SelectedIndex;
+
+                if (Config.Item("FreezeActive").GetValue<KeyBind>().Active && (useQi == 0 || useQi == 2) && Q.IsReady() &&
+                    minion.IsValidTarget(Q.Range + Q.Width) && Q.GetHealthPrediction(leMinion) > 0)
+                {
+                    Q.Cast(leMinion);
+                }
             }
+            
         }
 
         private static void Interrupter_OnPossibleToInterrupt(Obj_AI_Base unit, InterruptableSpell spell)
@@ -266,19 +262,18 @@ namespace Orianna
 
             if (CheckHitE(target, ObjectManager.Player))
             {
-                Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(ObjectManager.Player.NetworkId, SpellSlot.E)).Send();
+                E.Cast(ObjectManager.Player);
                 return;
             }
 
-            foreach (var alliedHero in
-                ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero.IsValidTarget(E.Range, false) && hero.IsAlly))
+            foreach (var alliedHero in ObjectManager.Get<Obj_AI_Hero>().FindAll(hero => hero.IsValidTarget(E.Range, false) && hero.IsAlly))
             {
                 if (CheckHitE(target, alliedHero) ||
                     (allValid &&
                      ObjectManager.Get<Obj_AI_Hero>()
                          .Any(enemyHero => enemyHero.IsValidTarget() && CheckHitE(enemyHero, alliedHero))))
                 {
-                    Packet.C2S.Cast.Encoded(new Packet.C2S.Cast.Struct(alliedHero.NetworkId, SpellSlot.E)).Send();
+                    E.Cast(alliedHero);
                     return;
                 }
             }
@@ -314,8 +309,8 @@ namespace Orianna
             var useR = (combo && Config.Item("UseRCombo").GetValue<bool>());
             var useI = (combo && Config.Item("UseIgniteCombo").GetValue<bool>());
 
-            var qTarget = SimpleTs.GetTarget(Q.Range + Q.Width, SimpleTs.DamageType.Magical);
-            var eTarget = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Magical);
+            var qTarget = TargetSelector.GetTarget(Q.Range + Q.Width, TargetSelector.DamageType.Magical);
+            var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
 
             if (qTarget != null)
             {
@@ -342,7 +337,7 @@ namespace Orianna
                 }
 
                 if (useI && IgniteSlot != SpellSlot.Unknown &&
-                    ObjectManager.Player.SummonerSpellbook.CanUseSpell(IgniteSlot) == SpellState.Ready)
+                    ObjectManager.Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready)
                 {
                     dmg += ObjectManager.Player.GetSummonerSpellDamage(qTarget, Damage.SummonerSpell.Ignite);
                 }
@@ -369,10 +364,10 @@ namespace Orianna
                 }
 
                 if (useI && IgniteSlot != SpellSlot.Unknown &&
-                    ObjectManager.Player.SummonerSpellbook.CanUseSpell(IgniteSlot) == SpellState.Ready &&
+                    ObjectManager.Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready &&
                     dmg > qTarget.Health)
                 {
-                    ObjectManager.Player.SummonerSpellbook.CastSpell(IgniteSlot, qTarget);
+                    ObjectManager.Player.Spellbook.CastSpell(IgniteSlot, qTarget);
                 }
             }
 
@@ -413,7 +408,7 @@ namespace Orianna
                 else
                 {
                     foreach (var minion in
-                        allMinionsQ.Where(
+                        allMinionsQ.FindAll(
                             minion =>
                                 !Orbwalking.InAutoAttackRange(minion) && minion.Health < 0.75 * Q.GetDamage(minion)))
                     {
@@ -440,7 +435,7 @@ namespace Orianna
                 {
                     // ReSharper disable once UnusedVariable
                     foreach (var minion in
-                        allMinionsW.Where(
+                        allMinionsW.FindAll(
                             minion =>
                                 !Orbwalking.InAutoAttackRange(minion) && minion.Health < 0.75 * W.GetDamage(minion)))
                     {

@@ -54,7 +54,7 @@ namespace Poppy
 
             //Add the target selector to the menu as submenu.
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-            SimpleTs.AddToMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
 
             //Load the orbwalker and add it to the menu as submenu.
@@ -78,7 +78,7 @@ namespace Poppy
             Config.AddToMainMenu();
 
             //Add the Events we need
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnGameUpdate;
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
             Drawing.OnDraw += Drawing_OnDraw;
         }
@@ -93,7 +93,7 @@ namespace Poppy
             Utility.DrawCircle(Player.Position, E.Range, Config.Item("ERange").GetValue<Circle>().Color);
         }
 
-        private static void Orbwalking_AfterAttack(Obj_AI_Base unit, Obj_AI_Base target)
+        private static void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
             //If the Combo or the UseQCombo or Q is not ready or the unit is not me or the target is not a hero return
             if (!Config.Item("ComboActive").GetValue<bool>() || !Config.Item("UseQCombo").GetValue<bool>() ||
@@ -109,7 +109,7 @@ namespace Poppy
             {
                 var useQ = Config.Item("UseQCombo").GetValue<bool>();
                 var useE = Config.Item("UseQCombo").GetValue<bool>();
-                var target = SimpleTs.GetTarget(E.Range, SimpleTs.DamageType.Physical);
+                var target = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
 
                 if (useE && E.IsReady())
                 {

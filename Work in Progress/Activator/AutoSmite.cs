@@ -61,7 +61,7 @@ namespace Activator
             if (SemiSmite == SpellSlot.Unknown && SmiteSlot == SpellSlot.Unknown)
                 return;
 
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
         }
 
@@ -106,7 +106,7 @@ namespace Activator
         {
             var damage = 0d;
 
-            if (Player.SummonerSpellbook.CanUseSpell(SmiteSlot) == SpellState.Ready)
+            if (Player.Spellbook.CanUseSpell(SmiteSlot) == SpellState.Ready)
                 damage += Player.GetSummonerSpellDamage(minion, Damage.SummonerSpell.Smite);
 
             if (Player.Spellbook.CanUseSpell(SemiSmite) == SpellState.Ready && Player.Distance(minion.ServerPosition) < SpellRange)
@@ -124,7 +124,7 @@ namespace Activator
             }
             else
             {
-                Player.SummonerSpellbook.CastSpell(slot, unit);
+                Player.Spellbook.CastSpell(slot, unit);
             }
         }
 

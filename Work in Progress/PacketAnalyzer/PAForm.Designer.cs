@@ -29,20 +29,22 @@
         private void InitializeComponent()
         {
             this.PGridSend = new System.Windows.Forms.DataGridView();
-            this.Header = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Size = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Channel = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Flags = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.textBox1 = new System.Windows.Forms.TextBox();
             this.PGridRecv = new System.Windows.Forms.DataGridView();
+            this.btnClear = new System.Windows.Forms.Button();
+            this.chkRecv = new System.Windows.Forms.CheckBox();
+            this.chkSend = new System.Windows.Forms.CheckBox();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.btnClear = new System.Windows.Forms.Button();
-            this.chkRecv = new System.Windows.Forms.CheckBox();
-            this.chkSend = new System.Windows.Forms.CheckBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.Tick = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Header = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Size = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Channel = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Flags = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.PGridSend)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PGridRecv)).BeginInit();
@@ -55,52 +57,13 @@
             this.Header,
             this.Size,
             this.Channel,
-            this.Flags});
+            this.Flags,
+            this.dataGridViewTextBoxColumn5});
             this.PGridSend.Location = new System.Drawing.Point(6, 42);
             this.PGridSend.Name = "PGridSend";
-            this.PGridSend.Size = new System.Drawing.Size(246, 297);
+            this.PGridSend.Size = new System.Drawing.Size(311, 297);
             this.PGridSend.TabIndex = 6;
             this.PGridSend.MouseDown += new System.Windows.Forms.MouseEventHandler(this.PGridSend_MouseDown);
-            // 
-            // Header
-            // 
-            this.Header.Frozen = true;
-            this.Header.HeaderText = "Header";
-            this.Header.MaxInputLength = 4;
-            this.Header.Name = "Header";
-            this.Header.ReadOnly = true;
-            this.Header.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.Header.Width = 50;
-            // 
-            // Size
-            // 
-            this.Size.Frozen = true;
-            this.Size.HeaderText = "Size";
-            this.Size.MaxInputLength = 5;
-            this.Size.Name = "Size";
-            this.Size.ReadOnly = true;
-            this.Size.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.Size.Width = 50;
-            // 
-            // Channel
-            // 
-            this.Channel.Frozen = true;
-            this.Channel.HeaderText = "Channel";
-            this.Channel.MaxInputLength = 1;
-            this.Channel.Name = "Channel";
-            this.Channel.ReadOnly = true;
-            this.Channel.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.Channel.Width = 50;
-            // 
-            // Flags
-            // 
-            this.Flags.Frozen = true;
-            this.Flags.HeaderText = "Flags";
-            this.Flags.MaxInputLength = 1;
-            this.Flags.Name = "Flags";
-            this.Flags.ReadOnly = true;
-            this.Flags.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.Flags.Width = 60;
             // 
             // groupBox1
             // 
@@ -117,6 +80,13 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "groupBox1";
             // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(6, 345);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(563, 20);
+            this.textBox1.TabIndex = 13;
+            // 
             // PGridRecv
             // 
             this.PGridRecv.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -124,12 +94,47 @@
             this.dataGridViewTextBoxColumn1,
             this.dataGridViewTextBoxColumn2,
             this.dataGridViewTextBoxColumn3,
-            this.dataGridViewTextBoxColumn4});
+            this.dataGridViewTextBoxColumn4,
+            this.Tick});
             this.PGridRecv.Location = new System.Drawing.Point(323, 42);
             this.PGridRecv.Name = "PGridRecv";
-            this.PGridRecv.Size = new System.Drawing.Size(246, 297);
+            this.PGridRecv.Size = new System.Drawing.Size(310, 297);
             this.PGridRecv.TabIndex = 12;
             this.PGridRecv.MouseDown += new System.Windows.Forms.MouseEventHandler(this.PGridRecv_MouseDown);
+            // 
+            // btnClear
+            // 
+            this.btnClear.Location = new System.Drawing.Point(126, 14);
+            this.btnClear.Name = "btnClear";
+            this.btnClear.Size = new System.Drawing.Size(84, 25);
+            this.btnClear.TabIndex = 11;
+            this.btnClear.Text = "Clear";
+            this.btnClear.UseVisualStyleBackColor = true;
+            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
+            // 
+            // chkRecv
+            // 
+            this.chkRecv.AutoSize = true;
+            this.chkRecv.Checked = true;
+            this.chkRecv.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkRecv.Location = new System.Drawing.Point(323, 19);
+            this.chkRecv.Name = "chkRecv";
+            this.chkRecv.Size = new System.Drawing.Size(55, 17);
+            this.chkRecv.TabIndex = 9;
+            this.chkRecv.Text = "RECV";
+            this.chkRecv.UseVisualStyleBackColor = true;
+            // 
+            // chkSend
+            // 
+            this.chkSend.AutoSize = true;
+            this.chkSend.Checked = true;
+            this.chkSend.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkSend.Location = new System.Drawing.Point(6, 19);
+            this.chkSend.Name = "chkSend";
+            this.chkSend.Size = new System.Drawing.Size(56, 17);
+            this.chkSend.TabIndex = 8;
+            this.chkSend.Text = "SEND";
+            this.chkSend.UseVisualStyleBackColor = true;
             // 
             // dataGridViewTextBoxColumn1
             // 
@@ -171,46 +176,56 @@
             this.dataGridViewTextBoxColumn4.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewTextBoxColumn4.Width = 60;
             // 
-            // btnClear
+            // Tick
             // 
-            this.btnClear.Location = new System.Drawing.Point(126, 14);
-            this.btnClear.Name = "btnClear";
-            this.btnClear.Size = new System.Drawing.Size(84, 25);
-            this.btnClear.TabIndex = 11;
-            this.btnClear.Text = "Clear";
-            this.btnClear.UseVisualStyleBackColor = true;
-            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
+            this.Tick.HeaderText = "Tick";
+            this.Tick.Name = "Tick";
             // 
-            // chkRecv
+            // Header
             // 
-            this.chkRecv.AutoSize = true;
-            this.chkRecv.Checked = true;
-            this.chkRecv.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkRecv.Location = new System.Drawing.Point(323, 19);
-            this.chkRecv.Name = "chkRecv";
-            this.chkRecv.Size = new System.Drawing.Size(55, 17);
-            this.chkRecv.TabIndex = 9;
-            this.chkRecv.Text = "RECV";
-            this.chkRecv.UseVisualStyleBackColor = true;
+            this.Header.Frozen = true;
+            this.Header.HeaderText = "Header";
+            this.Header.MaxInputLength = 4;
+            this.Header.Name = "Header";
+            this.Header.ReadOnly = true;
+            this.Header.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.Header.Width = 50;
             // 
-            // chkSend
+            // Size
             // 
-            this.chkSend.AutoSize = true;
-            this.chkSend.Checked = true;
-            this.chkSend.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkSend.Location = new System.Drawing.Point(6, 19);
-            this.chkSend.Name = "chkSend";
-            this.chkSend.Size = new System.Drawing.Size(56, 17);
-            this.chkSend.TabIndex = 8;
-            this.chkSend.Text = "SEND";
-            this.chkSend.UseVisualStyleBackColor = true;
+            this.Size.Frozen = true;
+            this.Size.HeaderText = "Size";
+            this.Size.MaxInputLength = 5;
+            this.Size.Name = "Size";
+            this.Size.ReadOnly = true;
+            this.Size.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.Size.Width = 50;
             // 
-            // textBox1
+            // Channel
             // 
-            this.textBox1.Location = new System.Drawing.Point(6, 345);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(563, 20);
-            this.textBox1.TabIndex = 13;
+            this.Channel.Frozen = true;
+            this.Channel.HeaderText = "Channel";
+            this.Channel.MaxInputLength = 1;
+            this.Channel.Name = "Channel";
+            this.Channel.ReadOnly = true;
+            this.Channel.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.Channel.Width = 50;
+            // 
+            // Flags
+            // 
+            this.Flags.Frozen = true;
+            this.Flags.HeaderText = "Flags";
+            this.Flags.MaxInputLength = 1;
+            this.Flags.Name = "Flags";
+            this.Flags.ReadOnly = true;
+            this.Flags.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.Flags.Width = 60;
+            // 
+            // dataGridViewTextBoxColumn5
+            // 
+            this.dataGridViewTextBoxColumn5.Frozen = true;
+            this.dataGridViewTextBoxColumn5.HeaderText = "Tick";
+            this.dataGridViewTextBoxColumn5.Name = "dataGridViewTextBoxColumn5";
             // 
             // PAForm
             // 
@@ -236,16 +251,18 @@
         public System.Windows.Forms.CheckBox chkRecv;
         public System.Windows.Forms.CheckBox chkSend;
         private System.Windows.Forms.Button btnClear;
+        public System.Windows.Forms.DataGridView PGridRecv;
+        private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.DataGridViewTextBoxColumn Header;
         private System.Windows.Forms.DataGridViewTextBoxColumn Size;
         private System.Windows.Forms.DataGridViewTextBoxColumn Channel;
         private System.Windows.Forms.DataGridViewTextBoxColumn Flags;
-        public System.Windows.Forms.DataGridView PGridRecv;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn5;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Tick;
 
     }
 }

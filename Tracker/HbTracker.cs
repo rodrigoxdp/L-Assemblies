@@ -7,73 +7,51 @@ using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
-using SharpDX.Direct3D9;
-using Font = SharpDX.Direct3D9.Font;
+using Tracker.Properties;
+using Color = SharpDX.Color;
+using Rectangle = SharpDX.Rectangle;
 
 #endregion
 
 namespace Tracker
 {
     /// <summary>
-    /// Health bar tracker tracks allies and enemies spells and summoners cooldowns.
+    ///     Health bar tracker tracks allies and enemies spells and summoners cooldowns.
     /// </summary>
     public static class HbTracker
     {
-        public static Sprite Sprite;
-        public static Texture CdFrameTexture;
+        public static Render.Sprite CdFrame;
 
-        private static readonly Dictionary<string, Texture> SummonerTextures =
-            new Dictionary<string, Texture>(StringComparer.InvariantCultureIgnoreCase);
+        private static readonly Dictionary<string, Render.Sprite> SummonerTextures =
+            new Dictionary<string, Render.Sprite>(StringComparer.InvariantCultureIgnoreCase);
 
-        public static Line ReadyLine;
-        public static Font Text;
-
-        public static int X = 0;
-        public static int Y = 0;
-
-        public static SpellSlot[] SummonerSpellSlots = { ((SpellSlot) 4), ((SpellSlot) 5) };
+        public static Render.Line ReadyLine;
+        public static Render.Text Text;
+        public static SpellSlot[] SummonerSpellSlots = { SpellSlot.Summoner1, SpellSlot.Summoner2 };
         public static SpellSlot[] SpellSlots = { SpellSlot.Q, SpellSlot.W, SpellSlot.E, SpellSlot.R };
-
         public static Menu Config;
 
         public static string[] SummonersNames =
         {
-            "SummonerBarrier", "SummonerBoost", "SummonerClairvoyance",
-            "SummonerDot", "SummonerExhaust", "SummonerFlash", "SummonerHaste", "SummonerHeal", "SummonerMana",
-            "SummonerOdinGarrison", "SummonerRevive", "SummonerSmite", "SummonerTeleport"
+            "SummonerBarrier", "SummonerBoost", "SummonerDot", "SummonerExhaust",
+            "SummonerFlash", "SummonerHaste", "SummonerHeal", "SummonerOdinGarrison", "SummonerSmite",
+            "SummonerTeleport", "s5_summonersmiteduel", "s5_summonersmiteplayerganker", "s5_summonersmitequick",
+            "itemsmiteaoe"
         };
 
         static HbTracker()
         {
-            if (!Game.Version.Contains("4.19"))
-            {
-                SummonerSpellSlots = new[] { SpellSlot.Q, SpellSlot.W };
-            }
-
             try
             {
-                foreach (var sName in SummonersNames)
+                foreach (var sName in
+                    SummonersNames)
                 {
                     SummonerTextures.Add(sName, GetSummonerTexture(sName));
                 }
 
-                Sprite = new Sprite(Drawing.Direct3DDevice);
-                CdFrameTexture = Texture.FromMemory(
-                    Drawing.Direct3DDevice,
-                    (byte[]) new ImageConverter().ConvertTo(Properties.Resources.hud, typeof(byte[])), 147, 27, 0,
-                    Usage.None, Format.A1, Pool.Managed, Filter.Default, Filter.Default, 0);
-
-                ReadyLine = new Line(Drawing.Direct3DDevice) { Width = 2 };
-
-                Text = new Font(
-                    Drawing.Direct3DDevice,
-                    new FontDescription
-                    {
-                        FaceName = "Calibri",
-                        Height = 13,
-                        OutputPrecision = FontPrecision.Default,
-                        Quality = FontQuality.Default,
-                    });
+                CdFrame = new Render.Sprite(Resources.hud, Vector2.Zero);
+                ReadyLine = new Render.Line(Vector2.Zero, Vector2.Zero, 2, Color.Black);
+                Text = new Render.Text("", Vector2.Zero, 13, Color.Black);
             }
             catch (Exception e)
             {
@@ -83,8 +61,43 @@ namespace Tracker
             Drawing.OnPreReset += DrawingOnOnPreReset;
             Drawing.OnPostReset += DrawingOnOnPostReset;
             Drawing.OnDraw += Drawing_OnEndScene;
-            AppDomain.CurrentDomain.DomainUnload += CurrentDomainOnDomainUnload;
-            AppDomain.CurrentDomain.ProcessExit += CurrentDomainOnDomainUnload;
+            AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
+        }
+
+        private static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+        {
+            ReadyLine.Dispose();
+            Text.Dispose();
+            CdFrame.Dispose();
+
+            foreach (var sprite in SummonerTextures)
+            {
+                sprite.Value.Dispose();
+            }
+        }
+
+        private static void DrawingOnOnPostReset(EventArgs args)
+        {
+            ReadyLine.OnPostReset();
+            Text.OnPostReset();
+            CdFrame.OnPostReset();
+
+            foreach (var sprite in SummonerTextures)
+            {
+                sprite.Value.OnPostReset();
+            }
+        }
+
+        private static void DrawingOnOnPreReset(EventArgs args)
+        {
+            ReadyLine.OnPreReset();
+            Text.OnPreReset();
+            CdFrame.OnPreReset();
+
+            foreach (var sprite in SummonerTextures)
+            {
+                sprite.Value.OnPreReset();
+            }
         }
 
         public static void AttachToMenu(Menu menu)
@@ -92,204 +105,150 @@ namespace Tracker
             Config = menu.AddSubMenu(new Menu("CD Tracker", "CD Tracker"));
             Config.AddItem(new MenuItem("TrackAllies", "Track allies").SetValue(true));
             Config.AddItem(new MenuItem("TrackEnemies", "Track enemies").SetValue(true));
-            Config.AddItem(new MenuItem("TrackMe", "Track me").SetValue(false));
         }
 
-        private static Texture GetSummonerTexture(string name)
+        private static Render.Sprite GetSummonerTexture(string name)
         {
             Bitmap bitmap;
             switch (name)
             {
                 case "SummonerOdinGarrison":
-                    bitmap = Properties.Resources.SummonerOdinGarrison;
-                    break;
-                case "SummonerRevive":
-                    bitmap = Properties.Resources.SummonerRevive;
-                    break;
-                case "SummonerClairvoyance":
-                    bitmap = Properties.Resources.SummonerClairvoyance;
+                    bitmap = Resources.SummonerOdinGarrison;
                     break;
                 case "SummonerBoost":
-                    bitmap = Properties.Resources.SummonerBoost;
-                    break;
-                case "SummonerMana":
-                    bitmap = Properties.Resources.SummonerMana;
+                    bitmap = Resources.SummonerBoost;
                     break;
                 case "SummonerTeleport":
-                    bitmap = Properties.Resources.SummonerTeleport;
+                    bitmap = Resources.SummonerTeleport;
                     break;
                 case "SummonerHeal":
-                    bitmap = Properties.Resources.SummonerHeal;
+                    bitmap = Resources.SummonerHeal;
                     break;
                 case "SummonerExhaust":
-                    bitmap = Properties.Resources.SummonerExhaust;
+                    bitmap = Resources.SummonerExhaust;
                     break;
                 case "SummonerSmite":
-                    bitmap = Properties.Resources.SummonerSmite;
+                    bitmap = Resources.SummonerSmite;
                     break;
                 case "SummonerDot":
-                    bitmap = Properties.Resources.SummonerDot;
+                    bitmap = Resources.SummonerDot;
                     break;
                 case "SummonerHaste":
-                    bitmap = Properties.Resources.SummonerHaste;
+                    bitmap = Resources.SummonerHaste;
                     break;
                 case "SummonerFlash":
-                    bitmap = Properties.Resources.SummonerFlash;
+                    bitmap = Resources.SummonerFlash;
+                    break;
+                case "s5_summonersmiteduel":
+                    bitmap = Resources.s5_summonersmiteduel;
+                    break;
+                case "s5_summonersmiteplayerganker":
+                    bitmap = Resources.s5_summonersmiteplayerganker;
+                    break;
+                case "s5_summonersmitequick":
+                    bitmap = Resources.s5_summonersmitequick;
+                    break;
+                case "itemsmiteaoe":
+                    bitmap = Resources.itemsmiteaoe;
                     break;
                 default:
-                    bitmap = Properties.Resources.SummonerBarrier;
+                    bitmap = Resources.SummonerBarrier;
                     break;
             }
 
-            return Texture.FromMemory(
-                Drawing.Direct3DDevice, (byte[]) new ImageConverter().ConvertTo(bitmap, typeof(byte[])), 12, 240, 0,
-                Usage.None, Format.A1, Pool.Managed, Filter.Default, Filter.Default, 0);
-        }
-
-
-        private static void CurrentDomainOnDomainUnload(object sender, EventArgs eventArgs)
-        {
-            ReadyLine.Dispose();
-            Text.Dispose();
-            Sprite.Dispose();
-        }
-
-        private static void DrawingOnOnPostReset(EventArgs args)
-        {
-            ReadyLine.OnResetDevice();
-            Text.OnResetDevice();
-            Sprite.OnResetDevice();
-        }
-
-        private static void DrawingOnOnPreReset(EventArgs args)
-        {
-            ReadyLine.OnLostDevice();
-            Text.OnLostDevice();
-            Sprite.OnLostDevice();
-        }
-
-        private static void Game_OnWndProc(WndEventArgs args)
-        {
-            if (args.Msg != (uint) WindowsMessages.WM_KEYDOWN)
-            {
-                return;
-            }
-
-            var key = args.WParam;
-            switch (key)
-            {
-                case 97: //97 left
-                    X--;
-                    break;
-                case 101: //101 up
-                    Y--;
-                    break;
-                case 99: //99 right
-                    X++;
-                    break;
-                case 98: //98 down
-                    Y++;
-                    break;
-            }
+            return new Render.Sprite(bitmap, Vector2.Zero);
         }
 
         private static void Drawing_OnEndScene(EventArgs args)
         {
-            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed)
-            {
-                return;
-            }
-
             try
             {
-                if (Sprite.IsDisposed)
-                {
-                    return;
-                }
+                var screenWidth = Drawing.Width;
+                var screenHeight = Drawing.Height;
 
                 foreach (var hero in
-                    ObjectManager.Get<Obj_AI_Hero>()
-                        .Where(
-                            hero =>
-                                hero != null && hero.IsValid && (!hero.IsMe || Config.Item("TrackMe").GetValue<bool>()) &&
-                                hero.IsHPBarRendered &&
-                                (hero.IsEnemy && Config.Item("TrackEnemies").GetValue<bool>() ||
-                                 hero.IsAlly && Config.Item("TrackAllies").GetValue<bool>())))
+                    HeroManager.AllHeroes.Where(
+                        hero =>
+                            hero.IsValid && !hero.IsMe && hero.IsHPBarRendered &&
+                            (hero.IsEnemy && Config.Item("TrackEnemies").GetValue<bool>() ||
+                             hero.IsAlly && Config.Item("TrackAllies").GetValue<bool>())))
                 {
-                    Sprite.Begin();
+                    var pos = GetHPBarPositionWithOffset(hero);
+                    var X = (int) pos.X;
+                    var Y = (int) pos.Y;
 
-                    var indicator = new HpBarIndicator { Unit = hero };
-
-                    X = (int) indicator.Position.X;
-                    Y = (int) indicator.Position.Y;
+                    if (X < -300 || X > screenWidth + 300 || Y < -300 || Y > screenHeight + 300) continue;
 
                     var k = 0;
+
                     foreach (var sSlot in SummonerSpellSlots)
                     {
-                        var spell = hero.SummonerSpellbook.GetSpell(sSlot);
+                        var spell = hero.Spellbook.GetSpell(sSlot);
                         var texture = SummonerTextures.ContainsKey(spell.Name)
                             ? SummonerTextures[spell.Name]
                             : SummonerTextures["SummonerBarrier"];
                         var t = spell.CooldownExpires - Game.Time;
-
-                        var percent = (Math.Abs(spell.Cooldown) > float.Epsilon) ? t / spell.Cooldown : 1f;
-                        var n = (t > 0) ? (int) (19 * (1f - percent)) : 19;
+                        var percent = Math.Abs(spell.Cooldown) > float.Epsilon ? t / spell.Cooldown : 1f;
+                        var n = t > 0 ? (int) (19 * (1f - percent)) : 19;
                         var ts = TimeSpan.FromSeconds((int) t);
-                        var s = t > 60 ? string.Format("{0}:{1:D2}", ts.Minutes, ts.Seconds) : String.Format("{0:0}", t);
+                        var s = t > 60 ? string.Format("{0}:{1:D2}", ts.Minutes, ts.Seconds) : string.Format("{0:0}", t);
+
                         if (t > 0)
                         {
-                            Text.DrawText(
-                                null, s, X - 5 - s.Length * 5, Y + 1 + 13 * k, new ColorBGRA(255, 255, 255, 255));
+                            Text.text = s;
+                            Text.X = X - 5 - s.Length * 5;
+                            Text.Y = Y + 1 + 13 * k;
+                            Text.Color = Color.White;
+                            Text.OnEndScene();
                         }
 
-                        Sprite.Draw(
-                            texture, new ColorBGRA(255, 255, 255, 255), new SharpDX.Rectangle(0, 12 * n, 12, 12),
-                            new Vector3(-X - 3, -Y - 1 - 13 * k, 0));
+                        texture.X = X + 3;
+                        texture.Y = Y + 1 + 13 * k;
+                        var crop = 12;
+                        texture.Crop(new Rectangle(0, 12 * n, crop, 12));
+                        texture.OnEndScene();
                         k++;
                     }
 
-                    Sprite.Draw(CdFrameTexture, new ColorBGRA(255, 255, 255, 255), null, new Vector3(-X, -Y, 0));
-                    Sprite.End();
+                    CdFrame.X = X;
+                    CdFrame.Y = Y;
+                    CdFrame.OnEndScene();
 
                     var startX = X + 19;
                     var startY = Y + 20;
 
-                    ReadyLine.Begin();
                     foreach (var slot in SpellSlots)
                     {
                         var spell = hero.Spellbook.GetSpell(slot);
                         var t = spell.CooldownExpires - Game.Time;
-                        var percent = (t > 0 && Math.Abs(spell.Cooldown) > float.Epsilon)
-                            ? 1f - (t / spell.Cooldown)
-                            : 1f;
+                        var percent = t > 0 && Math.Abs(spell.Cooldown) > float.Epsilon ? 1f - t / spell.Cooldown : 1f;
 
                         if (t > 0 && t < 100)
                         {
                             var s = string.Format(t < 1f ? "{0:0.0}" : "{0:0}", t);
-                            Text.DrawText(
-                                null, s, startX + (23 - s.Length * 4) / 2, startY + 6, new ColorBGRA(255, 255, 255, 255));
+                            Text.text = s;
+                            Text.X = startX + (24 - s.Length * 4) / 2;
+                            Text.Y = startY + 6;
+                            Text.Color = Color.White;
+                            Text.OnEndScene();
                         }
 
-                        var darkColor = (t > 0) ? new ColorBGRA(168, 98, 0, 255) : new ColorBGRA(0, 130, 15, 255);
-                        var lightColor = (t > 0) ? new ColorBGRA(235, 137, 0, 255) : new ColorBGRA(0, 168, 25, 255);
+                        var darkColor = t > 0 ? new ColorBGRA(168, 98, 0, 255) : new ColorBGRA(0, 130, 15, 255);
+                        var lightColor = t > 0 ? new ColorBGRA(235, 137, 0, 255) : new ColorBGRA(0, 168, 25, 255);
 
                         if (hero.Spellbook.CanUseSpell(slot) != SpellState.NotLearned)
                         {
                             for (var i = 0; i < 2; i++)
                             {
-                                ReadyLine.Draw(
-                                    new[]
-                                    {
-                                        new Vector2(startX, startY + i * 2),
-                                        new Vector2(startX + percent * 23, startY + i * 2)
-                                    },
-                                    i == 0 ? lightColor : darkColor);
+                                ReadyLine.Start = new Vector2(startX, startY + i * 2);
+                                ReadyLine.End = new Vector2(startX + percent * 23, startY + i * 2);
+                                ReadyLine.Color = i == 0 ? lightColor : darkColor;
+                                ReadyLine.OnEndScene();
                             }
                         }
 
                         startX = startX + 27;
                     }
-                    ReadyLine.End();
                 }
             }
             catch (Exception e)
@@ -298,27 +257,13 @@ namespace Tracker
             }
         }
 
-        internal class HpBarIndicator
+        private static Vector2 GetHPBarPositionWithOffset(Obj_AI_Hero unit)
         {
-            internal Obj_AI_Hero Unit { get; set; }
-
-            private Vector2 Offset
-            {
-                get
-                {
-                    if (Unit != null)
-                    {
-                        return Unit.IsAlly ? new Vector2(-9, 14) : new Vector2(-9, 17);
-                    }
-
-                    return new Vector2();
-                }
-            }
-
-            internal Vector2 Position
-            {
-                get { return new Vector2(Unit.HPBarPosition.X + Offset.X, Unit.HPBarPosition.Y + Offset.Y); }
-            }
+            var teamOffset = unit.IsAlly ? new Vector2(-9, 14) : new Vector2(-9, 17);
+            var champOffset = unit.ChampionName == "Jhin" ? new Vector2(-8, -14) : Vector2.Zero;
+            var offset = teamOffset + champOffset;
+            var hpPos = unit.HPBarPosition;
+            return new Vector2(hpPos.X + offset.X, hpPos.Y + offset.Y);
         }
     }
 }

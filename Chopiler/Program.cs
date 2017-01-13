@@ -5,7 +5,7 @@ using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 
-namespace Cho_Gath
+namespace ChoGath
 {
     internal class Program
     {
@@ -66,7 +66,7 @@ namespace Cho_Gath
             Config.AddToMainMenu();
 
             Drawing.OnDraw    += Drawing_OnDraw;
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnGameUpdate;
             Interrupter.OnPossibleToInterrupt += Interrupter_OnPosibleToInterrupt;
         }
 
@@ -127,17 +127,17 @@ namespace Cho_Gath
 
         private static void ExecuteCombo()
         {
-            var target = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.Magical);
+            var target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
             if (target == null) return;
 
             var useQ = Config.Item("UseQCombo").GetValue<bool>();
             var useW = Config.Item("UseWCombo").GetValue<bool>();
             var useR = Config.Item("UseRCombo").GetValue<bool>();
 
-            if (W.IsReady() && useW && ObjectManager.Player.Distance(target) <= W.Range)
+            if (W.IsReady() && useW && ObjectManager.Player.Distance(target, false) <= W.Range)
                 W.Cast(target, false, true);
 
-            if (Q.IsReady() && useQ && ObjectManager.Player.Distance(target) <= Q.Range)
+            if (Q.IsReady() && useQ && ObjectManager.Player.Distance(target, false) <= Q.Range)
                 Q.Cast(target, false, true);
 
             if (R.IsReady() && useR && ObjectManager.Player.GetSpellDamage(target, SpellSlot.R) > target.Health)
@@ -148,15 +148,15 @@ namespace Cho_Gath
         {
             foreach (var hero in ObjectManager.Get<Obj_AI_Hero>().Where(hero => hero.IsValidTarget(Q.Range)))
             {
-                if (R.IsReady() && hero.Distance(ObjectManager.Player) <= R.Range &&
+                if (R.IsReady() && hero.Distance(ObjectManager.Player, false) <= R.Range &&
                     ObjectManager.Player.GetSpellDamage(hero, SpellSlot.R) > hero.Health)
                     R.CastOnUnit(hero, true);
 
-                if (W.IsReady() && hero.Distance(ObjectManager.Player) <= W.Range &&
+                if (W.IsReady() && hero.Distance(ObjectManager.Player, false) <= W.Range &&
                     ObjectManager.Player.GetSpellDamage(hero, SpellSlot.W) > hero.Health)
                     W.CastIfHitchanceEquals(hero, HitChance.High, true);
 
-                if (Q.IsReady() && hero.Distance(ObjectManager.Player) <= Q.Range &&
+                if (Q.IsReady() && hero.Distance(ObjectManager.Player, false) <= Q.Range &&
                     ObjectManager.Player.GetSpellDamage(hero, SpellSlot.Q) > hero.Health)
                     Q.CastIfHitchanceEquals(hero, HitChance.High, true);
             }

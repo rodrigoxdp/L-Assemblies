@@ -100,11 +100,11 @@ namespace Activator
                         {
                             if (position.IsValid() && ObjectManager.Player.Distance(position, true) < Range * Range)
                             {
-                                return ObjectManager.Player.SummonerSpellbook.CastSpell(slot, position.To3D());
+                                return ObjectManager.Player.Spellbook.CastSpell(slot, position.To3D());
                             }
                             if (target.IsValidTarget(Range, false))
                             {
-                                return ObjectManager.Player.SummonerSpellbook.CastSpell(slot);
+                                return ObjectManager.Player.Spellbook.CastSpell(slot);
                             }
                         }
                         return false;

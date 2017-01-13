@@ -20,6 +20,8 @@ namespace DisableSpells
 
         private static void Main(string[] args)
         {
+			Game.PrintChat("Disable Spells: Already patched :^)");
+			return;
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
         }
 
@@ -130,7 +132,7 @@ namespace DisableSpells
             Config.AddToMainMenu();
 
             Game.PrintChat("Exploit loaded!");
-            Game.OnGameUpdate += Game_OnGameUpdate;
+            Game.OnUpdate += Game_OnGameUpdate;
         }
 
         private static void Game_OnGameUpdate(EventArgs args)

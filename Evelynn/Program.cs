@@ -56,7 +56,7 @@ namespace Evelynn
             Config = new Menu(ChampionName, ChampionName, true);
 
             var targetSelectorMenu = new Menu("Target Selector", "Target Selector");
-            SimpleTs.AddToMenu(targetSelectorMenu);
+            TargetSelector.AddToMenu(targetSelectorMenu);
             Config.AddSubMenu(targetSelectorMenu);
 
             //Orbwalker submenu
@@ -104,17 +104,21 @@ namespace Evelynn
 
             //Add the events we are going to use:
             Drawing.OnDraw += Drawing_OnDraw;
-            Game.OnGameUpdate += Game_OnGameUpdate;
-            Game.OnGameSendPacket += Game_OnGameSendPacket;
+            Game.OnUpdate += Game_OnGameUpdate;
+            Spellbook.OnCastSpell += Spellbook_OnCastSpell;
         }
 
         private static void Drawing_OnDraw(EventArgs args)
         {
             foreach (var spell in SpellList)
             {
+                if (spell.Slot == SpellSlot.W)
+                {
+                    return;
+                }
                 var menuItem = Config.Item(spell.Slot + "Range").GetValue<Circle>();
                 if (menuItem.Active)
-                    Utility.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
+                    Render.Circle.DrawCircle(ObjectManager.Player.Position, spell.Range, menuItem.Color);
             }
         }
 
@@ -135,25 +139,22 @@ namespace Evelynn
                 JungleFarm();
         }
 
-        private static void Game_OnGameSendPacket(GamePacketEventArgs args)
+        private static void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
         {
-            if (args.PacketData[0] != Packet.C2S.Cast.Header) return;
-
-            var decodedPacket = Packet.C2S.Cast.Decoded(args.PacketData);
-            if (decodedPacket.SourceNetworkId != ObjectManager.Player.NetworkId || decodedPacket.Slot != SpellSlot.R)
-                return;
-
-            if (ObjectManager.Get<Obj_AI_Hero>()
+            if (sender.Owner.IsMe && args.Slot == SpellSlot.R)
+            {
+                if (ObjectManager.Get<Obj_AI_Hero>()
                 .Count(
                     hero =>
                         hero.IsValidTarget() &&
-                        hero.Distance(new Vector2(decodedPacket.ToX, decodedPacket.ToY)) <= R.Range) == 0)
-                args.Process = false;
+                        hero.Distance(args.StartPosition.To2D()) <= R.Range) == 0)
+                    args.Process = false;
+            }
         }
 
         private static void Combo()
         {
-            var target = SimpleTs.GetTarget(Q.Range, SimpleTs.DamageType.True);
+            var target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.True);
 
             if (target != null)
             {
@@ -192,7 +193,7 @@ namespace Evelynn
         {
             var minions = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range);
 
-            foreach (var minion in minions.Where(minion => minion.IsValidTarget(Q.Range)))
+            foreach (var minion in minions.FindAll(minion => minion.IsValidTarget(Q.Range)))
             {
                 if (Config.Item("UseQLaneClear").GetValue<bool>() && Q.IsReady())
                     Q.Cast();
